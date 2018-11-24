@@ -37,7 +37,7 @@ function getMovie (req, res) {
   } else if (orden === 'duracion') {
     sql += ` ORDER BY duracion ${tipoOrden}`;
   }
-  //Esto no se si esta bien, algo no estaria funcionando con el paginado.
+  //Paging
   sql += ` LIMIT ${((pagina - 1) * cantidad) + 1},${cantidad}`;
   console.log(sql)
   connection.query(sql, function(error, result) {
