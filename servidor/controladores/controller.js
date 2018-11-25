@@ -3,26 +3,19 @@ var connection = require('../lib/conexionbd');
 function getMovie (req, res) {
   var sql = 'SELECT * FROM pelicula';
   var totalQuery = 'SELECT COUNT(*) AS total FROM pelicula';
-  var titulo = req.query.titulo;
-  var anio = req.query.anio;
-  var genero = req.query.genero;
-  var orden =req.query.columna_orden; 
-  var tipoOrden = req.query.tipo_orden;
-  var pagina = req.query.pagina;
-  var cantidad = req.query.cantidad;
-
+  
   //FILTERS
   var filters = ` WHERE `
-  if (titulo) filters += `titulo LIKE \'\%${titulo}\%\'`;
+  if (req.query.titulo) filters += `titulo LIKE \'\%${req.query.titulo}\%\'`;
   
-  if (anio) {
-    if (titulo) filters += ` AND `
-    filters += `anio = ${anio}`; 
+  if (req.query.anio) {
+    if (req.query.titulo) filters += ` AND `
+    filters += `anio = ${req.query.anio}`; 
   }
 
-  if (genero) {
-    if (titulo || anio) filters += ` AND `
-    filters += `genero_id = ${genero}`; 
+  if (req.query.genero) {
+    if (req.query.titulo || req.query.anio) filters += ` AND `
+    filters += `genero_id = ${req.query.genero}`; 
   } 
   
   if (filters != ` WHERE `){
@@ -31,16 +24,14 @@ function getMovie (req, res) {
   }
 
   //Order by and Limit
-  if (orden === 'anio') {
-    sql += ` ORDER BY fecha_lanzamiento ${tipoOrden}`;
-  } else if (orden === 'puntuacion') {
-    sql += ` ORDER BY puntuacion ${tipoOrden}`;
-  } else if (orden === 'duracion') {
-    sql += ` ORDER BY duracion ${tipoOrden}`;
+  if (req.query.columna_orden === 'anio') {
+    sql += ` ORDER BY fecha_lanzamiento ${req.query.tipo_orden}`;
+  } else if (req.query.columna_orden === 'puntuacion') {
+    sql += ` ORDER BY puntuacion ${req.query.tipo_orden}`;
   }
 
   //Paging
-  sql += ` LIMIT ${((pagina - 1) * cantidad) + 1},${cantidad}`;
+  sql += ` LIMIT ${((req.query.pagina - 1) * req.query.pagina) + 1},${req.query.cantidad}`;
   connection.query(sql, function(error, result) {
     if (error) {
       console.log("ERROR: ", error.message);
