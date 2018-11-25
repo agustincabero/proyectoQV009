@@ -81,9 +81,8 @@ function getGenres(req, res) {
 }
 
 function getInfo (req, res) {
-  var id = req.params.id;
 
-  var sql = `SELECT pelicula.id, titulo, duracion, director, anio, fecha_lanzamiento, puntuacion, poster, trama, genero.nombre as genero, actor.nombre FROM pelicula INNER JOIN genero ON pelicula.genero_id = genero.id INNER JOIN actor_pelicula ON pelicula.id = pelicula_id INNER JOIN actor ON actor.id = actor_id WHERE pelicula.id = ${id}`;
+  var sql = `SELECT pelicula.id, titulo, duracion, director, anio, fecha_lanzamiento, puntuacion, poster, trama, genero.nombre as genero, actor.nombre FROM pelicula INNER JOIN genero ON pelicula.genero_id = genero.id INNER JOIN actor_pelicula ON pelicula.id = pelicula_id INNER JOIN actor ON actor.id = actor_id WHERE pelicula.id = ${req.params.id}`;
 
   connection.query(sql, function(error, result) {
     if (error) {
@@ -101,8 +100,45 @@ function getInfo (req, res) {
   });
 }
 
+function getRecomm (req, res) {
+  var sql = 'SELECT pelicula.id, titulo, trama, nombre, poster FROM pelicula INNER JOIN genero ON pelicula.genero_id = genero.id';
+
+  //FILTERS
+  var filters = ` WHERE `
+  
+  if (req.query.puntuacion) filters += `pelicula.puntuacion >= ${req.query.puntuacion}`;
+  
+  if (req.query.anio_inicio && req.query.anio_fin) {
+    if (req.query.puntuacion) filters += ` AND `
+    filters += `pelicula.anio BETWEEN ${req.query.anio_inicio} AND ${req.query.anio_fin}`;
+  }
+
+  if (req.query.genero){
+    if (req.query.puntuacion || (req.query.anio_inicio && req.query.anio_fin)) filters += ` AND `
+    filters += `genero.nombre = \'${req.query.genero}\'`;
+  }
+
+  if (filters != ` WHERE `){
+    sql += filters;
+  }
+
+  connection.query(sql, function(error, result) {
+    if (error) {
+      console.log("ERROR: ", error.message);
+      return res.status(404).send(error.message)    
+    }
+
+    var response = {
+      'peliculas': result
+    };
+
+    res.send(JSON.stringify(response));    
+  });
+}
+
 module.exports = {
   getMovie: getMovie,
   getGenres: getGenres,
-  getInfo: getInfo
+  getInfo: getInfo,
+  getRecomm: getRecomm
 };
