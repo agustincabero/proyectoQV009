@@ -35,8 +35,8 @@ CREATE TABLE `actor`(
 
 CREATE TABLE `actor_pelicula`(
   `id` int NOT NULL auto_increment,
-  actor_id int NOT NULL,
-  pelicula_id int NOT NULL,
+  `actor_id`int NOT NULL,
+  `pelicula_id` int NOT NULL,
   PRIMARY KEY (id)
 );
 

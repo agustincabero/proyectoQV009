@@ -11,7 +11,7 @@ function getMovie (req, res) {
   var pagina = req.query.pagina;
   var cantidad = req.query.cantidad;
 
-  //FILTERS (es una chanchada?)
+  //FILTERS
   var filters = ` WHERE `
   if (titulo) filters += `titulo LIKE \'\%${titulo}\%\'`;
   
@@ -29,6 +29,7 @@ function getMovie (req, res) {
     sql += filters;
     totalQuery += filters;
   }
+
   //Order by and Limit
   if (orden === 'anio') {
     sql += ` ORDER BY fecha_lanzamiento ${tipoOrden}`;
@@ -37,13 +38,13 @@ function getMovie (req, res) {
   } else if (orden === 'duracion') {
     sql += ` ORDER BY duracion ${tipoOrden}`;
   }
+
   //Paging
   sql += ` LIMIT ${((pagina - 1) * cantidad) + 1},${cantidad}`;
-  console.log(sql)
   connection.query(sql, function(error, result) {
     if (error) {
-        console.log("ERROR: ", error.message);
-        return res.status(404).send(error.message)    
+      console.log("ERROR: ", error.message);
+      return res.status(404).send(error.message)    
     }
 
     connection.query(totalQuery, function(error, totalCount) {
@@ -51,8 +52,6 @@ function getMovie (req, res) {
         console.log("ERROR: ", error.message);
         return res.status(404).send(error.message)       
       }
-      
-      console.log(totalCount[0].total);
 
       var response = {
         'peliculas': result,
@@ -61,7 +60,6 @@ function getMovie (req, res) {
 
       res.send(JSON.stringify(response));   
     });
-
   });
 }
 
@@ -84,26 +82,23 @@ function getGenres(req, res) {
 
 function getInfo (req, res) {
   var id = req.params.id;
-  var sql = `SELECT * FROM pelicula INNER JOIN genero ON genero_id = genero.id WHERE pelicula.id = ${id}`;
-  
+
+  var sql = `SELECT pelicula.id, titulo, duracion, director, anio, fecha_lanzamiento, puntuacion, poster, trama, genero.nombre as genero, actor.nombre FROM pelicula INNER JOIN genero ON pelicula.genero_id = genero.id INNER JOIN actor_pelicula ON pelicula.id = pelicula_id INNER JOIN actor ON actor.id = actor_id WHERE pelicula.id = ${id}`;
 
   connection.query(sql, function(error, result) {
     if (error) {
         console.log("Hubo un error en la consulta", error.message);
         return res.status(404).send("Hubo un error en la consulta");
-    } 
-    
-    var response = {
-        'generos': result
     };
 
-    res.send(JSON.stringify(response));
+    var response = {
+      pelicula: result[0],
+      actores: result,
+      genero: result[0].genero
+    };
+    
+    res.send(JSON.stringify(response));  
   });
-  // res.send({
-  //   pelicula:'asasas',
-  //   actores:'asas',
-  //   genero:'asas'
-  // });
 }
 
 module.exports = {
